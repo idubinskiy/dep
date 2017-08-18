@@ -47,10 +47,13 @@ func TestCtx_ProjectImport(t *testing.T) {
 		}
 	}
 
-	// test where it should return an error when directly within $GOPATH/src
+	// test where it return an empty import root when directly within $GOPATH/src
 	got, err := depCtx.ImportForAbs(filepath.Join(depCtx.GOPATH, "src"))
-	if err == nil || !strings.Contains(err.Error(), "GOPATH/src") {
-		t.Fatalf("should have gotten an error for use directly in GOPATH/src, but got %s", got)
+	if err != nil {
+		t.Fatalf("should not have gotten an error for use directly in GOPATH/src, but got %s", err)
+	}
+	if got != "" {
+		t.Fatalf("should have gotten an empty import root for use directly in GOPATH/src, but got %q", got)
 	}
 
 	// test where it should return an error

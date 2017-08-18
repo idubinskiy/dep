@@ -122,6 +122,12 @@ func ListPackages(fileRoot, importRoot string) (PackageTree, error) {
 		// import paths.
 		ip := filepath.ToSlash(filepath.Join(importRoot, strings.TrimPrefix(wp, fileRoot)))
 
+		// In cases where the import root is empty, the import path will have
+		// a leading slash. Remove it.
+		if importRoot == "" {
+			ip = strings.TrimPrefix(ip, "/")
+		}
+
 		// Find all the imports, across all os/arch combos
 		//p, err := fullPackageInDir(wp)
 		p := &build.Package{
@@ -488,10 +494,10 @@ func (t PackageTree) ToReachMap(main, tests, backprop bool, ignore map[string]bo
 				continue
 			}
 
-			if !eqOrSlashedPrefix(imp, t.ImportRoot) {
-				w.ex[imp] = true
-			} else {
+			if _, ok := t.Packages[imp]; ok {
 				w.in[imp] = true
+			} else {
+				w.ex[imp] = true
 			}
 		}
 
@@ -864,17 +870,6 @@ func wmToReach(workmap map[string]wm, backprop bool) (ReachMap, map[string]*Prob
 	}
 
 	return rm, errmap
-}
-
-// eqOrSlashedPrefix checks to see if the prefix is either equal to the string,
-// or that it is a prefix and the next char in the string is "/".
-func eqOrSlashedPrefix(s, prefix string) bool {
-	if !strings.HasPrefix(s, prefix) {
-		return false
-	}
-
-	prflen, pathlen := len(prefix), len(s)
-	return prflen == pathlen || strings.Index(s[prflen:], "/") == 0
 }
 
 // helper func to merge, dedupe, and sort strings
